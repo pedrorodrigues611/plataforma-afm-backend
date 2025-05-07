@@ -38,12 +38,13 @@ const usersRoutes        = require("./routes/users");
 const rankRoutes = require("./routes/rank");
 const reportsRoutes = require('./routes/reports');
 
-app.use("/api", relatoriosRoutes);
-app.use('/api', perguntasRoutes); 
-app.use('/api', suggestionsRoutes);
-app.use("/api", usersRoutes);
-app.use("/api", rankRoutes);
-app.use('/api', reportsRoutes);
+app.use("/api/relatorios", relatoriosRoutes);
+app.use("/api/perguntas",  perguntasRoutes);
+app.use("/api/suggestions", suggestionsRoutes);
+app.use("/api/users",       usersRoutes);
+app.use("/api/rank",        rankRoutes);
+app.use("/api/reports",     reportsRoutes);
+
 
 
 mongoose.connect(process.env.MONGO_URI, {
@@ -256,7 +257,7 @@ app.put("/api/make-admin", async (req, res) => {
   res.status(200).json({ message: "Usuário agora é admin", user });
 });
 
-
-app.listen(5000, () => {
-  console.log("Servidor backend iniciado na porta 5000");
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Servidor backend iniciado na porta ${PORT}`);
 });
