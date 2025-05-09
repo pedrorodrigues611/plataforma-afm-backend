@@ -7,7 +7,7 @@ const multer = require("multer");
 const path = require("path");
 const nodemailer = require("nodemailer");  // Importar o Nodemailer
 const fs = require('fs'); // Importa o módulo fs para manipulação de arquivos
-
+const apiRouter   = require('./routes');      // <— aqui
 
 const Suggestion = require('./models/Suggestion');
 require("dotenv").config();
