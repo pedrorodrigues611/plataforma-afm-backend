@@ -22,7 +22,18 @@ const usersRoutes       = require('./routes/users');
 const rankRoutes        = require('./routes/rank');
 const reportsRoutes     = require('./routes/reports');
 
+const Pergunta = require('./models/Pergunta');
 const app = express();
+
+app.get('/api/teste', async (req, res) => {
+  try {
+    const lista = await Pergunta.find();  
+    res.json(lista);
+  } catch (err) {
+    console.error('GET /api/teste:', err);
+    res.status(500).json({ message: 'Erro no servidor' });
+  }
+});
 
 // Body parser
 app.use(express.json());
