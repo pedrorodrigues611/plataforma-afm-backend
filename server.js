@@ -8,9 +8,7 @@ const path = require("path");
 const nodemailer = require("nodemailer");  // Importar o Nodemailer
 const fs = require('fs'); // Importa o módulo fs para manipulação de arquivos
 
-import express from 'express';
-import cors from 'cors';
-import path from 'path';
+
 const Suggestion = require('./models/Suggestion');
 require("dotenv").config();
 
