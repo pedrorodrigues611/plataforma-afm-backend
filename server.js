@@ -25,6 +25,16 @@ const reportsRoutes     = require('./routes/reports');
 const Pergunta = require('./models/Pergunta');
 const app = express();
 
+
+//Body parser: transforma JSON no req.body
+app.use(express.json());
+
+// CORS global: libera todas as rotas para qualquer origem
+app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization'] }));
+
+
+
+
 app.get('/api/teste', async (req, res) => {
   try {
     const lista = await Pergunta.find();  
@@ -35,11 +45,7 @@ app.get('/api/teste', async (req, res) => {
   }
 });
 
-// Body parser
-app.use(express.json());
 
-// Enable CORS
-app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization'] }));
 
 // Ensure uploads directory
 const uploadsDir = path.join(__dirname, 'uploads');
