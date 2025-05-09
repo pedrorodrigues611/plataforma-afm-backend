@@ -88,12 +88,24 @@ app.post('/api/login', async (req, res) => {
 
 // Get profile
 app.get('/api/profile', async (req, res) => {
-  const auth = req.headers.authorization; if (!auth) return res.status(401).json({ message: 'Token não fornecido' });
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(401).json({ message: 'Token não fornecido' });
   try {
     const { id } = jwt.verify(auth.split(' ')[1], process.env.JWT_SECRET);
-    const user = await User.findById(id); if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
-    res.json({ name: user.name, userId: user.userId, photo: user.photo || '/uploads/semperfil.jpg', role: user.role });
-  } catch (err) { console.error('GET /api/profile:', err); res.status(401).json({ message: 'Token inválido' }); }
+    const user = await User.findById(id);
+    if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+    // Retorna também o email para que o front não sobrescreva com undefined
+    res.json({ 
+      name:  user.name, 
+      userId: user.userId,
+      email: user.email,
+      photo: user.photo || '/uploads/semperfil.jpg',
+      role:  user.role 
+    });
+  } catch (err) {
+    console.error('GET /api/profile:', err);
+    res.status(401).json({ message: 'Token inválido' });
+  }
 });
 
 // Handle preflight
