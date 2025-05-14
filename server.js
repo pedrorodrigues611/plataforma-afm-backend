@@ -8,7 +8,7 @@ const multer      = require('multer');
 const path        = require('path');
 const nodemailer  = require('nodemailer');
 const fs          = require('fs');
-const recomecosRoutes = require('./routes/recomecos');
+
 require('dotenv').config();
 
 // Model imports
@@ -22,7 +22,7 @@ const suggestionsRoutes = require('./routes/suggestions');
 const usersRoutes       = require('./routes/users');
 const rankRoutes        = require('./routes/rank');
 const reportsRoutes     = require('./routes/reports');
-
+const recomecosRoutes = require('./routes/recomecos');
 const Pergunta = require('./models/Pergunta');
 const app = express();
 
@@ -64,7 +64,7 @@ app.use('/api/suggestions', suggestionsRoutes);
 app.use('/api/users', usersRoutes);
 app.use('/api/rank', rankRoutes);
 app.use('/api/reports', reportsRoutes);
-app.use('/api', recomecosRoutes);
+app.use('/api/recomecos', recomecosRoutes);
 
 // Generate JWT token
 const generateToken = (user) => jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
