@@ -80,13 +80,6 @@ app.use('/api/recomecos', recomecosRoutes);
 const generateToken = (user) => jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 
 
-const cors = require('cors');
-app.use(cors({
-  origin: [
-    'https://plataforma-afm.vercel.app',
-    'http://localhost:3000'
-  ]
-}));
 
 // Forgot password
 app.post('/api/forgot-password', async (req, res) => {
