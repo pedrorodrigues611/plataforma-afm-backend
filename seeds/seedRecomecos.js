@@ -1,41 +1,41 @@
-// scripts/seedRecomecos.js
+// backend/seeds/seedRecomecos.js
 
-const fs   = require('fs');
-const path = require('path');
-const Recome = require('../models/Recomeco');
+const fs       = require('fs');
+const path     = require('path');
+const mongoose = require('mongoose');
+const Recome   = require('../models/recomeco');
 
-// caminho onde está o teu ficheiro JSON de recomeços
-const JSON_PATH = path.join(__dirname, 'recomeços.json');
+const MONGODB_URI =
+  process.env.MONGODB_URI ||
+  'mongodb://127.0.0.1:27017/PlataformaAFM';   // ← ajuste o nome do DB aqui
 
 async function seedRecomecos() {
-  let dados;
+  // 1) Conecta
+  await mongoose.connect(MONGODB_URI, {
+    useNewUrlParser:    true,
+    useUnifiedTopology: true
+  });
+  console.log('✅ MongoDB conectado em', MONGODB_URI);
 
-  if (fs.existsSync(JSON_PATH)) {
-    // já geraste o JSON: só faz parse
-    dados = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
-  } else {
-    // se quiseres ler do PDF e gerar JSON on-the-fly,
-    // poderias usar algo como pdf-parse aqui:
-    //
-    // const pdfParse = require('pdf-parse');
-    // const buffer = fs.readFileSync(path.join(__dirname, 'recomeços.pdf'));
-    // const { text } = await pdfParse(buffer);
-    // dados = parseTextoParaRecomecos(text);
-    // fs.writeFileSync(JSON_PATH, JSON.stringify(dados, null, 2));
-    //
-    throw new Error('Não existe recomeços.json — gera-o primeiro a partir do PDF');
+  // 2) Lê o JSON
+  const JSON_PATH = path.join(__dirname, '../data/recomeços.json');
+  if (!fs.existsSync(JSON_PATH)) {
+    throw new Error('Não encontrei ' + JSON_PATH);
   }
+  const dados = JSON.parse(fs.readFileSync(JSON_PATH, 'utf8'));
 
-  for (const item of dados) {
-    // assume que cada item tem os campos que o teu esquema espera
-    await Recome.create(item);
-  }
+  // 3) Limpa e insere
+  await Recome.deleteMany({});
+  console.log('🗑️  coleção recomecos limpa');
+  const inserted = await Recome.insertMany(dados);
+  console.log(`🌱 Seed de ${inserted.length} recomeços concluída.`);
 
-  console.log(`Seed de ${dados.length} recomeços concluída.`);
-  process.exit();
+  // 4) Desconecta
+  await mongoose.disconnect();
+  process.exit(0);
 }
 
 seedRecomecos().catch(err => {
-  console.error(err);
+  console.error('❌ Seed falhou:', err);
   process.exit(1);
 });

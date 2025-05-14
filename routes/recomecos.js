@@ -1,17 +1,16 @@
-// routes/recomecos.js
+// backend/routes/recomecos.js
 const express = require('express');
 const router = express.Router();
-const Recomeco = require('../models/Recomeco'); // ajusta o caminho/modelo
+const Recomeco = require('../models/Recomeco');
 
-// GET /api/recomecos
-router.get('/', async (req, res) => {
-  console.log('🔍 GET /api/recomecos chamado');
+// GET /api/recomecos  → devolve todos os recomeços
+router.get('/recomecos', async (req, res) => {
   try {
-    const lista = await Recomeco.find()  // ou outro .aggregate(...)
+    const lista = await Recomeco.find();
     res.json(lista);
   } catch (err) {
-    console.error('Erro ao carregar recomecos:', err);
-    res.status(500).json({ message: 'Erro ao carregar recomecos' });
+    console.error(err);
+    res.status(500).json({ message: 'Erro ao carregar recomeços' });
   }
 });
 

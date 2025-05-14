@@ -1,13 +1,25 @@
 [
   {
-    "ocorrencia": "Jogador sai do terreno para agredir elemento estranho. Árbitro interrompe apenas quando vê a agressão.",
-    "decisaoTecnica": "Bola ao solo (cf. Lei 8)",
-    "decisaoDisciplinar": "Sem ação disciplinar"
-  },
+   "ocorrencia": "Jogador sai do terreno para agredir elemento estranho…",
+   "tecnicas": [
+     { "label": "Bola ao solo (cf. Lei 8)", "value": "bola_ao_solo" }
+   ],
+   "locais": [
+     "solo"
+   ],
+   "disciplinas": [
+     { "label": "Sem ação disciplinar", "value": "sem_acao" }
+   ]
+ },
   {
-    "ocorrencia": "Jogadores trocam, de camisolas, com o jogo a decorrer. Árbitro interrompe o jogo no momento da troca.",
-    "decisaoTecnica": "PLI • No local onde trocaram as camisolas",
-    "decisaoDisciplinar": "Aos dois jogadores"
+    "ocorrencia": "Jogadores trocam de camisolas com o jogo a decorrer…",
+   "tecnicas": [
+     { "label": "PLI • No local onde trocaram as camisolas", "value": "pli_troca_camisolas" }
+   ],
+   "locais": ["no campo"],
+   "disciplinas": [
+     { "label": "Aos dois jogadores", "value": "aos_dois_jogadores" }
+   ]
   }
   
 ]
