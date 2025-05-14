@@ -27,8 +27,18 @@ const Pergunta = require('./models/Pergunta');
 const app = express();
 
 
+// server.js (logo após const app = express();)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] → ${req.method} ${req.url}`);
+  next();
+});
+
+
 //Body parser: transforma JSON no req.body
 app.use(express.json());
+
+
+
 
 // CORS global: libera todas as rotas para qualquer origem
 app.use(cors({ origin: '*', methods: ['GET','POST','PUT','PATCH','DELETE','OPTIONS'], allowedHeaders: ['Content-Type','Authorization'] }));
