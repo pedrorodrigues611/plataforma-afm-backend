@@ -1,8 +1,8 @@
 // backend/routes/suggestions.js
-const express = require('express');
-const jwt     = require('jsonwebtoken');
-const SuggestedQuestion = require('../models/Suggestion');
-const router  = express.Router();
+const express             = require('express');
+const jwt                 = require('jsonwebtoken');
+const SuggestedQuestion   = require('../models/Suggestion');
+const router              = express.Router();
 
 // middleware de autenticação via Bearer Token
 const auth = (req, res, next) => {
@@ -20,12 +20,11 @@ const auth = (req, res, next) => {
 };
 
 /**
- * POST /api/suggest-question
- * Cria uma nova sugestão enviada pelo user.
- * Body esperado:
- *   { texto: String, opcoes: { A, B, C, D }, correta: 'A'|'B'|'C'|'D' }
+ * POST /api/suggestions
+ * Cria uma nova sugestão.
+ * Body: { texto, opcoes: { A, B, C, D }, correta }
  */
-router.post('/',               auth, async (req, res) => {
+router.post('/', auth, async (req, res) => {
   const { texto, opcoes, correta } = req.body;
   if (
     !texto ||
@@ -37,41 +36,41 @@ router.post('/',               auth, async (req, res) => {
 
   try {
     const sug = new SuggestedQuestion({
-      text: texto,
-      options: opcoes,
-      correct: correta,
+      text:      texto,
+      options:   opcoes,
+      correct:   correta,
       createdBy: req.userId
     });
     await sug.save();
     return res.status(201).json({ message: 'Questão enviada para aprovação' });
   } catch (err) {
-    console.error('❌ [suggest-question] Erro ao gravar sugestão:', err);
+    console.error('❌ [POST /api/suggestions] Erro ao gravar sugestão:', err);
     return res.status(500).json({ message: 'Erro no servidor.' });
   }
 });
 
 /**
  * GET /api/suggestions
- * Lista todas as sugestões com status 'pending' (reservado ao admin).
+ * Lista todas as sugestões pendentes (admin).
  */
-router.get('/',                auth, async (req, res) => { 
+router.get('/', auth, async (req, res) => {
   try {
     const list = await SuggestedQuestion
       .find({ status: 'pending' })
       .sort({ createdAt: -1 });
     return res.json(list);
   } catch (err) {
-    console.error('❌ [get suggestions] Erro ao buscar pendentes:', err);
+    console.error('❌ [GET /api/suggestions] Erro ao buscar pendentes:', err);
     return res.status(500).json({ message: 'Erro no servidor.' });
   }
 });
 
 /**
  * PATCH /api/suggestions/:id
- * Permite ao admin aprovar ou rejeitar uma sugestão.
- * Body esperado: { status: 'approved' | 'rejected' }
+ * Aprova ou rejeita uma sugestão (admin).
+ * Body: { status: 'approved' | 'rejected' }
  */
-router.patch('/:id',           auth, async (req, res) => {
+router.patch('/:id', auth, async (req, res) => {
   const { id }     = req.params;
   const { status } = req.body;
   if (!['approved','rejected'].includes(status)) {
@@ -84,14 +83,14 @@ router.patch('/:id',           auth, async (req, res) => {
     await sug.save();
     return res.json({ message: 'Atualizado com sucesso' });
   } catch (err) {
-    console.error('❌ [patch suggestion] Erro ao atualizar:', err);
+    console.error('❌ [PATCH /api/suggestions/:id] Erro ao atualizar:', err);
     return res.status(500).json({ message: 'Erro no servidor.' });
   }
 });
 
 /**
- * GET /api/my-suggestions
- * Lista todas as sugestões criadas pelo próprio user, independente do status.
+ * GET /api/suggestions/my-suggestions
+ * Lista todas as sugestões do usuário (qualquer status).
  */
 router.get('/my-suggestions', auth, async (req, res) => {
   try {
@@ -100,7 +99,7 @@ router.get('/my-suggestions', auth, async (req, res) => {
       .sort({ createdAt: -1 });
     return res.json(mine);
   } catch (err) {
-    console.error('❌ [my-suggestions] Erro ao buscar minhas sugestões:', err);
+    console.error('❌ [GET /api/suggestions/my-suggestions] Erro ao buscar minhas sugestões:', err);
     return res.status(500).json({ message: 'Erro no servidor.' });
   }
 });
