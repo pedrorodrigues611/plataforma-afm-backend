@@ -25,7 +25,7 @@ const auth = (req, res, next) => {
  * Body esperado:
  *   { texto: String, opcoes: { A, B, C, D }, correta: 'A'|'B'|'C'|'D' }
  */
-router.post('/suggest-question', auth, async (req, res) => {
+router.post('/',               auth, async (req, res) => {
   const { texto, opcoes, correta } = req.body;
   if (
     !texto ||
@@ -54,7 +54,7 @@ router.post('/suggest-question', auth, async (req, res) => {
  * GET /api/suggestions
  * Lista todas as sugestões com status 'pending' (reservado ao admin).
  */
-router.get('/suggestions', auth, async (req, res) => {
+router.get('/',                auth, async (req, res) => { 
   try {
     const list = await SuggestedQuestion
       .find({ status: 'pending' })
@@ -71,7 +71,7 @@ router.get('/suggestions', auth, async (req, res) => {
  * Permite ao admin aprovar ou rejeitar uma sugestão.
  * Body esperado: { status: 'approved' | 'rejected' }
  */
-router.patch('/suggestions/:id', auth, async (req, res) => {
+router.patch('/:id',           auth, async (req, res) => {
   const { id }     = req.params;
   const { status } = req.body;
   if (!['approved','rejected'].includes(status)) {
