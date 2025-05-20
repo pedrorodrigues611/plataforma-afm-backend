@@ -57,6 +57,7 @@ router.get('/', auth, async (req, res) => {
   try {
     const list = await SuggestedQuestion
       .find({ status: 'pending' })
+      .populate('createdBy','userId name')
       .sort({ createdAt: -1 });
     return res.json(list);
   } catch (err) {

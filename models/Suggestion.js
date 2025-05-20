@@ -9,8 +9,10 @@ const suggestionSchema = new mongoose.Schema({
     C: { type: String, required: true },
     D: { type: String, required: true },
   },
+  correct:   { type: String, enum: ['A','B','C','D'], required: true },
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   status:    { type: String, enum: ['pending','approved','rejected'], default: 'pending' },
+ rejectionReason: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
 });
 
