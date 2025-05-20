@@ -5,11 +5,14 @@ const mongoose    = require('mongoose');
 const jwt         = require('jsonwebtoken');
 const bcrypt      = require('bcryptjs');
 const multer      = require('multer');
-const path        = require('path');
 const nodemailer  = require('nodemailer');
-const fs          = require('fs');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
+const defaultPhoto = 'https://res.cloudinary.com/dqyzexarc/image/upload/v1747745038/semperfil_viyqwz.jpg';
 
 require('dotenv').config();
+
+
 
 // Model imports
 const User       = require('./models/User');
@@ -25,6 +28,16 @@ const reportsRoutes     = require('./routes/reports');
 const recomecosRoutes = require('./routes/recomecos');
 const Pergunta = require('./models/Pergunta');
 const app = express();
+
+
+
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
+
+
 
 
 // server.js (logo após const app = express();)
@@ -56,16 +69,19 @@ app.get('/api/teste', async (req, res) => {
   }
 });
 
-
-
-// Ensure uploads directory
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir);
-app.use('/uploads', express.static(uploadsDir));
-
-// Multer setup
-const storage = multer.diskStorage({ destination: (req, file, cb) => cb(null, uploadsDir), filename: (req, file, cb) => cb(null, Date.now() + path.extname(file.originalname)) });
+// Multer + Cloudinary storage
+const storage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'afm_profiles',          // nome da “pasta” no Cloudinary
+    allowed_formats: ['jpg','png'],  // formatos permitidos
+    transformation: [
+      { width: 256, height: 256, crop: 'fill' }
+    ]
+  }
+});
 const upload = multer({ storage });
+
 
 // API routes
 app.use('/api/relatorios', relatoriosRoutes);
@@ -130,7 +146,7 @@ app.get('/api/profile', async (req, res) => {
       name:  user.name, 
       userId: user.userId,
       email: user.email,
-      photo: user.photo || '/uploads/semperfil.jpg',
+      photo: user.photo || defaultPhoto,
       role:  user.role 
     });
   } catch (err) {
@@ -155,7 +171,7 @@ app.put('/api/profile', upload.single('photo'), async (req, res) => {
     if (typeof email === 'string' && email.trim() !== '') {
       user.email = email.trim();
     }
-    if (req.file) user.photo = `/uploads/${req.file.filename}`;
+    if (req.file) user.photo = req.file.path;
     await user.save();
     res.json({ message: 'Perfil atualizado com sucesso' });
   } catch (err) {
