@@ -48,7 +48,14 @@ router.post('/suggest-question', auth, async (req, res) => {
  */
 router.get('/', auth, async (req, res) => {
   try {
-    const list = await SuggestedQuestion.find({ status: 'pending' }).sort({ createdAt: -1 });
+    const list = await SuggestedQuestion
+      .find({ status: 'pending' })
+      .sort({ createdAt: -1 })
+      .populate({ 
+        path: 'createdBy', 
+        select: 'userId name'      // traga o campo userId (e name, se quiseres)
+      });
+
     return res.json(list);
   } catch (err) {
     console.error('❌ [get suggestions] Erro ao buscar pendentes:', err);
