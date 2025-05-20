@@ -116,7 +116,15 @@ app.post('/api/register', async (req, res) => {
     const [byEmail, byId] = await Promise.all([ User.findOne({ email }), User.findOne({ userId }) ]);
     if (byEmail || byId) return res.status(400).json({ message: 'Email ou ID já registado' });
     const hashed = await bcrypt.hash(password, 10);
-    const newUser = new User({ name, userId, email, password: hashed, role: 'user' }); await newUser.save();
+    const newUser = new User({
+     name,
+     userId,
+     email,
+     password: hashed,
+     role: 'user',
+     photo: defaultPhoto           // ← força o default do Cloudinary
+   });
+    await newUser.save();
     res.json({ token: generateToken(newUser) });
   } catch (err) { console.error('POST /api/register:', err); res.status(500).json({ message: 'Erro ao registrar usuário' }); }
 });
