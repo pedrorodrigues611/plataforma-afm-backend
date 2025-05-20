@@ -63,13 +63,26 @@ router.get('/', auth, async (req, res) => {
 router.patch('/:id', auth, async (req, res) => {
   const { id } = req.params;
   const { status, reason } = req.body;
+
+  // apenas estes status são válidos
   if (!['approved','rejected'].includes(status)) {
     return res.status(400).json({ message: 'Status inválido' });
   }
+
   try {
+    // só atualizamos os campos que vieram
     const update = { status };
-    if (status === 'rejected' && reason) update.rejectionReason = reason;
-    await SuggestedQuestion.findByIdAndUpdate(id, update, { new: true });
+    if (status === 'rejected' && reason) {
+      update.rejectionReason = reason;
+    }
+
+    // usar findByIdAndUpdate para não revalidar 'correct'
+    await SuggestedQuestion.findByIdAndUpdate(
+      id,
+      update,
+      { new: true, runValidators: false }
+    );
+
     return res.json({ message: 'Atualizado com sucesso' });
   } catch (err) {
     console.error('❌ [patch suggestion] Erro ao atualizar:', err);
