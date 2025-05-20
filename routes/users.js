@@ -39,4 +39,27 @@ router.patch("/users/:id", authAdmin, async (req, res) => {
   }
 });
 
+// PUT /api/make-admin
+router.put('/make-admin', auth, async (req, res) => {
+  if (req.userRole !== 'admin') return res.status(403).end();
+  const { userId, promote } = req.body;
+  const user = await User.findOne({ userId });
+  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+  user.role = promote ? 'admin' : 'user';
+  await user.save();
+  res.json({ message: 'Role atualizada' });
+});
+
+// PUT /api/users/:id/ban
+router.put('/:id/ban', auth, async (req, res) => {
+  if (req.userRole !== 'admin') return res.status(403).end();
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
+  user.banned = true;
+  await user.save();
+  res.json({ message: 'Usuário banido' });
+});
+
+
+
 module.exports = router;
