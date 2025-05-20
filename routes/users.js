@@ -37,6 +37,21 @@ router.put('/make-admin', auth, async (req, res) => {
   }
 });
 
+
+router.get('/', auth, async (req, res) => {
+  // apenas admins podem listar todos
+  if (req.userRole !== 'admin') {
+    return res.status(403).json({ message: 'Acesso negado' });
+  }
+
+  try {
+    const users = await User.find().select('-password'); // retira a password
+    res.json(users);
+  } catch (err) {
+    console.error('Erro em GET /api/users:', err);
+    res.status(500).json({ message: 'Erro no servidor' });
+  }
+});
 /**
  * PUT /api/users/:id/ban
  * Banir um utilizador
