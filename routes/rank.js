@@ -68,7 +68,7 @@ router.get('/weekly', auth, async (req, res) => {
         }
       },
       { $unwind: '$user' },
-      { $project: { userId: '$user.userId', name: '$user.name', points: 1 } }
+      { $project: { userId: '$user.userId', photo:  '$user.photo', name: '$user.name', points: 1 } }
     ]);
 
     res.json(top10);
