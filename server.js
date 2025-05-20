@@ -9,7 +9,7 @@ const nodemailer  = require('nodemailer');
 const cloudinary = require('cloudinary').v2;
 const { CloudinaryStorage } = require('multer-storage-cloudinary');
 const defaultPhoto = 'https://res.cloudinary.com/dqyzexarc/image/upload/v1747745038/semperfil_viyqwz.jpg';
-const usersRoutes = require('./routes/users');
+
 
 require('dotenv').config();
 
