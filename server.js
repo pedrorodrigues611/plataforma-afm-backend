@@ -149,13 +149,18 @@ app.get('/api/profile', async (req, res) => {
     const user = await User.findById(id);
     if (!user) return res.status(404).json({ message: 'Usuário não encontrado' });
     // Retorna também o email para que o front não sobrescreva com undefined
-    res.json({ 
-      name:  user.name, 
-      userId: user.userId,
-      email: user.email,
-      photo: user.photo || defaultPhoto,
-      role:  user.role 
-    });
+    let photoUrl = user.photo || defaultPhoto;
+// se for um caminho local (começa por /uploads/), força sempre o default
+if (photoUrl.startsWith('/uploads/')) {
+  photoUrl = defaultPhoto;
+}
+res.json({ 
+  name:  user.name, 
+  userId: user.userId,
+  email: user.email,
+  photo: photoUrl,
+  role:  user.role 
+});
   } catch (err) {
     console.error('GET /api/profile:', err);
     res.status(401).json({ message: 'Token inválido' });
