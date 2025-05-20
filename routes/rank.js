@@ -45,30 +45,60 @@ router.post('/event', auth, async (req, res) => {
  * GET /api/rank/weekly
  * Retorna os 10 primeiros desta semana (segunda–domingo)
  */
+// routes/rank.js
 router.get('/weekly', auth, async (req, res) => {
   try {
-    const now = new Date();
-    const day = now.getDay(); // 0=Dom ... 6=Sáb
-    const diff = (day + 6) % 7;
+    const now   = new Date();
+    const day   = now.getDay();             // 0=Dom ... 6=Sáb
+    const diff  = (day + 6) % 7;            // desloca até 2ª-feira
     const weekStart = new Date(now);
     weekStart.setDate(now.getDate() - diff);
     weekStart.setHours(0,0,0,0);
 
     const top10 = await TestResult.aggregate([
       { $match: { createdAt: { $gte: weekStart } } },
-      { $group: { _id: '$userId', points: { $sum: '$points' } } },
+      {
+        $group: {
+          _id:      '$userId',
+          points:   { $sum: '$points' },
+          answered: { $sum: 1 },                                           // total de respostas
+          correct:  { $sum: { $cond: [{ $eq: ['$points', 5] }, 1, 0] } }   // só pontos=5
+        }
+      },
+      {
+        $project: {
+          userId:    '$_id',
+          points:    1,
+          answered:  1,
+          accuracy:  {
+            $cond: [
+              { $gt: ['$answered', 0] },
+              { $round: [{ $multiply: [{ $divide: ['$correct', '$answered'] }, 100] }, 1] },
+              0
+            ]
+          }
+        }
+      },
       { $sort: { points: -1 } },
       { $limit: 10 },
       {
         $lookup: {
-          from: 'users',
-          localField: '_id',
+          from:         'users',
+          localField:   'userId',
           foreignField: '_id',
-          as: 'user'
+          as:           'user'
         }
       },
       { $unwind: '$user' },
-      { $project: { userId: '$user.userId', photo:  '$user.photo', name: '$user.name', points: 1 } }
+      {
+        $project: {
+          userId:   '$user.userId',
+          name:     '$user.name',
+          points:   1,
+          answered: 1,
+          accuracy: 1
+        }
+      }
     ]);
 
     res.json(top10);
@@ -77,6 +107,7 @@ router.get('/weekly', auth, async (req, res) => {
     res.status(500).json({ message: 'Erro interno' });
   }
 });
+
 
 /**
  * GET /api/rank/medals
