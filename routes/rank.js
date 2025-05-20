@@ -94,6 +94,7 @@ router.get('/weekly', auth, async (req, res) => {
         $project: {
           userId:   '$user.userId',
           name:     '$user.name',
+          photo:    '$user.photo',
           points:   1,
           answered: 1,
           accuracy: 1
