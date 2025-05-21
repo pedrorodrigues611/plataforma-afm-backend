@@ -59,21 +59,22 @@ router.post('/event', auth, async (req, res) => {
  * Retorna top10 da semana (7 dias corridos)
  */
 router.get('/weekly', auth, async (req, res) => {
-  const today     = new Date()
+  const today     = new Date();
   const weekStart = new Date(
     today.getFullYear(),
     today.getMonth(),
     today.getDate() - 6,
     0,0,0,0
-  )
+  );
 
   const top10 = await TestResult.aggregate([
     { $match: { createdAt: { $gte: weekStart } } },
     { $group: {
         _id:      '$userId',
         points:   { $sum: '$points' },
-
-        // perguntas avulsas
+        // contar 1 evento “test” como 1 teste
+        tests:    { $sum: { $cond: [ { $eq:['$type','test'] }, 1, 0 ] } },
+        // respostas avulsas
         qAnswered: { $sum: { $cond: [ { $eq:['$type','question'] }, 1, 0 ] } },
         qCorrect:  { $sum: { 
           $cond: [
@@ -83,38 +84,28 @@ router.get('/weekly', auth, async (req, res) => {
             ]},
             1, 0
           ]
-        }},
-
-        // testes completos (já vêm answeredCount/correctCount)
-        tAnswered: { $sum: { $cond: [ { $eq:['$type','test'] }, '$answeredCount', 0 ] } },
-        tCorrect:  { $sum: { $cond: [ { $eq:['$type','test'] }, '$correctCount', 0 ] } },
-      }
-    },
-
-    // total absoluto
+        }}
+    }},
+    // total de perguntas (avulsas)
     { $addFields: {
-        answered: { $add: ['$qAnswered','$tAnswered'] },
-        correct:  { $add: ['$qCorrect','$tCorrect'] }
+        answered: '$qAnswered',
+        correct:  '$qCorrect'
       }
     },
-
     { $sort: { points: -1 } },
     { $limit: 10 },
-
-    // lookup e unwind de user…
     { $lookup: {
         from: 'users', localField: '_id', foreignField: '_id', as: 'user'
     }},
     { $unwind: '$user' },
-
     { $project: {
         _id:      0,
         userId:   '$user.userId',
         name:     '$user.name',
         photo:    '$user.photo',
         points:   1,
-        tests:    '$tAnswered',           // mantém nº de testes
-        answered: 1,                      // total (q + t)
+        tests:    1,
+        answered: 1,
         accuracy: {
           $cond: [
             { $eq: ['$answered', 0] },
@@ -126,10 +117,11 @@ router.get('/weekly', auth, async (req, res) => {
           ]
         }
     }}
-  ])
+  ]);
 
-  res.json(top10)
-})
+  res.json(top10);
+});
+
 
 
 /**
