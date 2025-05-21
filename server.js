@@ -68,6 +68,8 @@ app.get('/api/teste', async (req, res) => {
   }
 });
 
+
+
 // Multer + Cloudinary storage
 const storage = new CloudinaryStorage({
   cloudinary,
@@ -90,7 +92,6 @@ app.use('/api/users', usersRoutes);
 app.use('/api/rank', rankRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/recomecos', recomecosRoutes);
-app.use('/api/users', usersRoutes);
 // Generate JWT token
 const generateToken = (user) => jwt.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET, { expiresIn: '7d' });
 

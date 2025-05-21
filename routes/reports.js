@@ -27,7 +27,7 @@ router.get('/', auth, async (req, res) => {
   try {
     const reports = await Report.find({ status: 'pending' })
       .sort({ createdAt: -1 })
-      .populate('reporter', 'userId')         // para sabermos quem reportou
+      .populate('reportedBy', 'userId')         // para sabermos quem reportou
       .populate('questionId');                // se quiseres dados extra da pergunta
     res.json(reports);
   } catch (err) {
