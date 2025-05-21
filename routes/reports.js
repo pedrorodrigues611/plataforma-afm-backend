@@ -20,6 +20,32 @@ function auth(req, res, next) {
 }
 
 /**
+ * POST /api/reports
+ * Cria um novo report de pergunta
+ */
+router.post('/', auth, async (req, res) => {
+  const { questionId, text, options, correct, explanation } = req.body;
+  if (!text || !options || !correct) {
+    return res.status(400).json({ message: 'Dados insuficientes para reportar.' });
+  }
+  try {
+    const rpt = new Report({
+      questionId,
+      text,
+      options,
+      correct,
+      explanation,
+      reportedBy: req.userId
+    });
+    await rpt.save();
+    return res.status(201).json({ message: 'Report submetido com sucesso.' });
+  } catch (err) {
+    console.error('❌ [POST /api/reports]', err);
+    return res.status(500).json({ message: 'Erro ao gravar report.' });
+  }
+});
+
+/**
  * GET /api/reports
  * Lista todos os reports pendentes
  */
