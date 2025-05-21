@@ -9,6 +9,8 @@ const testResultSchema = new mongoose.Schema({
     required: true,
     default: 'question'
   },
+  answeredCount:{ type: Number, default: 0 },  // ex: 20 perguntas num teste
+  correctCount: { type: Number, default: 0 },  // ex: 18 certas num teste
   createdAt: { type: Date, default: Date.now }
 });
 

@@ -48,80 +48,78 @@ router.post('/event', auth, async (req, res) => {
  * Retorna top10 da semana (7 dias corridos)
  */
 router.get('/weekly', auth, async (req, res) => {
-  try {
-    // define início da semana (7 dias atrás, à meia-noite)
-    const today     = new Date()
-    const weekStart = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate() - 6, // inclui hoje + 6 dias atrás = 7 dias
-      0, 0, 0, 0
-    )
+  const today     = new Date()
+  const weekStart = new Date(
+    today.getFullYear(),
+    today.getMonth(),
+    today.getDate() - 6,
+    0,0,0,0
+  )
 
-    const top10 = await TestResult.aggregate([
-      // filtra apenas eventos desta semana
-      { $match: { createdAt: { $gte: weekStart } } },
+  const top10 = await TestResult.aggregate([
+    { $match: { createdAt: { $gte: weekStart } } },
+    { $group: {
+        _id:      '$userId',
+        points:   { $sum: '$points' },
 
-      // agrupa por utilizador, soma pontos e conta tipos
-      { $group: {
-          _id:      '$userId',
-          points:   { $sum: '$points' },
-          tests:    { $sum: { $cond: [ { $eq: ['$type','test']     }, 1, 0 ] } },
-          answered: { $sum: { $cond: [ { $eq: ['$type','question'] }, 1, 0 ] } },
-          correct:  { $sum: {
-            $cond: [
-              { $and: [
-                  { $eq: ['$type','question'] },
-                  { $gt: ['$points', 0] }
-                ]
-              },
-              1,
-              0
-            ]
-          }}
-      }},
+        // perguntas avulsas
+        qAnswered: { $sum: { $cond: [ { $eq:['$type','question'] }, 1, 0 ] } },
+        qCorrect:  { $sum: { 
+          $cond: [
+            { $and:[
+              { $eq:['$type','question'] },
+              { $gt:['$points',0] }
+            ]},
+            1, 0
+          ]
+        }},
 
-      // ordena por pontos e limita a 10
-      { $sort: { points: -1 } },
-      { $limit: 10 },
+        // testes completos (já vêm answeredCount/correctCount)
+        tAnswered: { $sum: { $cond: [ { $eq:['$type','test'] }, '$answeredCount', 0 ] } },
+        tCorrect:  { $sum: { $cond: [ { $eq:['$type','test'] }, '$correctCount', 0 ] } },
+      }
+    },
 
-      // lookup para puxar nome, foto e userId
-      { $lookup: {
-          from:         'users',
-          localField:   '_id',
-          foreignField: '_id',
-          as:           'user'
-      }},
-      { $unwind: '$user' },
+    // total absoluto
+    { $addFields: {
+        answered: { $add: ['$qAnswered','$tAnswered'] },
+        correct:  { $add: ['$qCorrect','$tCorrect'] }
+      }
+    },
 
-      // projecta o shape final
-      { $project: {
-          _id:      0,
-          userId:   '$user.userId',
-          name:     '$user.name',
-          photo:    '$user.photo',
-          points:   1,
-          tests:    1,
-          answered: 1,
-          accuracy: {
-            $cond: [
-              { $eq: ['$answered', 0] },
-              0,
-              { $multiply: [
-                  { $divide: ['$correct', '$answered'] },
-                  100
-                ]}
-            ]
-          }
-      }}
-    ])
+    { $sort: { points: -1 } },
+    { $limit: 10 },
 
-    res.json(top10)
-  } catch (err) {
-    console.error('Erro em GET /api/rank/weekly:', err)
-    res.status(500).json({ message: 'Erro no servidor.' })
-  }
+    // lookup e unwind de user…
+    { $lookup: {
+        from: 'users', localField: '_id', foreignField: '_id', as: 'user'
+    }},
+    { $unwind: '$user' },
+
+    { $project: {
+        _id:      0,
+        userId:   '$user.userId',
+        name:     '$user.name',
+        photo:    '$user.photo',
+        points:   1,
+        tests:    '$tAnswered',           // mantém nº de testes
+        answered: 1,                      // total (q + t)
+        accuracy: {
+          $cond: [
+            { $eq: ['$answered', 0] },
+            0,
+            { $multiply:[
+                { $divide: ['$correct', '$answered'] },
+                100
+            ]}
+          ]
+        }
+    }}
+  ])
+
+  res.json(top10)
 })
+
 
 /**
  * GET /api/rank/medals
