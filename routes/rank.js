@@ -47,67 +47,69 @@ router.post('/event', auth, async (req, res) => {
  */
 // routes/rank.js
 router.get('/weekly', auth, async (req, res) => {
-  try {
-    const now   = new Date();
-    const day   = now.getDay();             // 0=Dom ... 6=Sáb
-    const diff  = (day + 6) % 7;            // desloca até 2ª-feira
-    const weekStart = new Date(now);
-    weekStart.setDate(now.getDate() - diff);
-    weekStart.setHours(0,0,0,0);
-
-    const top10 = await TestResult.aggregate([
-      { $match: { createdAt: { $gte: weekStart } } },
-      {
-        $group: {
-          _id:      '$userId',
-          points:   { $sum: '$points' },
-          answered: { $sum: 1 },                                           // total de respostas
-          correct:  { $sum: { $cond: [{ $eq: ['$points', 5] }, 1, 0] } }   // só pontos=5
-        }
-      },
-      {
-        $project: {
-          userId:    '$_id',
-          points:    1,
-          answered:  1,
-          accuracy:  {
+  // ... cálculo de weekStart igual ao que já tinha ...
+  const top10 = await TestResult.aggregate([
+    { $match: { createdAt: { $gte: weekStart } } },
+    {
+      $group: {
+        _id: '$userId',
+        points:   { $sum: '$points' },
+        // total de testes completos
+        tests:    { $sum: { $cond: [ { $eq: ['$type','test'] }, 1, 0 ] } },
+        // total de perguntas avulsas (cada resposta válida ou não)
+        answered: { $sum: { $cond: [ { $eq: ['$type','question'] }, 1, 0 ] } },
+        // quantas dessas perguntas foram acertos
+        correct:  {
+          $sum: {
             $cond: [
-              { $gt: ['$answered', 0] },
-              { $round: [{ $multiply: [{ $divide: ['$correct', '$answered'] }, 100] }, 1] },
-              0
+              { $and: [
+                  { $eq: ['$type','question'] },
+                  { $gt: ['$points', 0] }
+                ]
+              },
+              1, 0
             ]
           }
         }
-      },
-      { $sort: { points: -1 } },
-      { $limit: 10 },
-      {
-        $lookup: {
-          from:         'users',
-          localField:   'userId',
-          foreignField: '_id',
-          as:           'user'
-        }
-      },
-      { $unwind: '$user' },
-      {
-        $project: {
-          userId:   '$user.userId',
-          name:     '$user.name',
-          photo:    '$user.photo',
-          points:   1,
-          answered: 1,
-          accuracy: 1
+      }
+    },
+    { $sort: { points: -1 } },
+    { $limit: 10 },
+    {
+      $lookup: {
+        from: 'users',
+        localField: '_id',
+        foreignField: '_id',
+        as: 'user'
+      }
+    },
+    { $unwind: '$user' },
+    {
+      $project: {
+        _id:      0,
+        userId:   '$user.userId',
+        name:     '$user.name',
+        photo:    '$user.photo',
+        points:   1,
+        tests:    1,
+        answered: 1,
+        accuracy: {
+          $cond: [
+            { $eq: ['$answered', 0] },
+            0,
+            { $multiply: [
+                { $divide: ['$correct', '$answered'] },
+                100
+              ]}
+          ]
         }
       }
-    ]);
+    }
+  ]);
 
-    res.json(top10);
-  } catch (err) {
-    console.error('Erro em GET /api/rank/weekly:', err);
-    res.status(500).json({ message: 'Erro interno' });
-  }
+  res.json(top10);
 });
+
 
 
 /**
