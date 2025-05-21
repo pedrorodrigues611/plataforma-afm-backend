@@ -39,7 +39,6 @@ cloudinary.config({
 
 
 
-
 // server.js (logo após const app = express();)
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] → ${req.method} ${req.url}`);
