@@ -27,24 +27,21 @@ function auth(req, res, next) {
  * Regista um evento de pontuação para o utilizador
  * body: { points: Number, type?: 'test'|'question' }
  */
+// POST /api/rank/event
 router.post('/event', auth, async (req, res) => {
-  const { points, type = 'question' } = req.body
+  const { points, type } = req.body;
   if (typeof points !== 'number' || !['test','question'].includes(type)) {
-    return res.status(400).json({ message: 'Dados inválidos' })
+    return res.status(400).json({ message: 'Pontos ou tipo inválido' });
   }
   try {
-    await TestResult.create({ 
-      userId: req.userId, 
-      points, 
-      type, 
-      createdAt: new Date() 
-    })
-    res.status(201).json({ message: 'Evento de ranking registado' })
+    await TestResult.create({ userId: req.userId, points, type });
+    return res.status(201).json({ message: 'Evento de ranking registado' });
   } catch (err) {
-    console.error('Erro ao registar evento de ranking:', err)
-    res.status(500).json({ message: 'Erro interno' })
+    console.error(err);
+    return res.status(500).json({ message: 'Erro interno' });
   }
-})
+});
+
 
 /**
  * GET /api/rank/weekly
