@@ -29,12 +29,23 @@ function auth(req, res, next) {
  */
 // POST /api/rank/event
 router.post('/event', auth, async (req, res) => {
-  const { points, type } = req.body;
-  if (typeof points !== 'number' || !['test','question'].includes(type)) {
+  const { points, type, answeredCount = 0, correctCount = 0 } = req.body;
+  if (
+    typeof points      !== 'number' ||
+    !['test','question'].includes(type) ||
+    (type === 'test' && (typeof answeredCount !== 'number' || typeof correctCount !== 'number'))
+  ) {
     return res.status(400).json({ message: 'Pontos ou tipo inválido' });
   }
   try {
-    await TestResult.create({ userId: req.userId, points, type });
+    await TestResult.create({
+      userId,
+      points,
+      type,
+      // só contamos estes campos em testes completos
+      answeredCount: type === 'test' ? answeredCount : 0,
+      correctCount:  type === 'test' ? correctCount  : 0
+    });
     return res.status(201).json({ message: 'Evento de ranking registado' });
   } catch (err) {
     console.error(err);
