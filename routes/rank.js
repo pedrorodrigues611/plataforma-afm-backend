@@ -39,7 +39,7 @@ router.post('/event', auth, async (req, res) => {
   }
   try {
     await TestResult.create({
-      userId,
+      userId:        req.userId,
       points,
       type,
       // só contamos estes campos em testes completos
